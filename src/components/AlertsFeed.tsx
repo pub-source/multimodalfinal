@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, ShieldAlert, User } from "lucide-react";
+import { AlertTriangle, Bell, ShieldAlert, User, Trash2 } from "lucide-react";
 import { useDetectionContext } from "@/context/DetectionContext";
 
 const typeConfig = {
@@ -17,7 +17,7 @@ const typeConfig = {
 };
 
 const AlertsFeed = () => {
-  const { alerts, enableAlerts } = useDetectionContext();
+  const { alerts, enableAlerts, clearAlerts } = useDetectionContext();
   const criticalCount = alerts.filter((a) => a.type === "critical").length;
 
   return (
@@ -25,12 +25,24 @@ const AlertsFeed = () => {
       <div className="panel-header">
         <Bell className="w-4 h-4 text-accent" />
         <span>Context Alerts</span>
-        {criticalCount > 0 && (
-          <span className="ml-auto flex items-center gap-1 text-[10px] font-mono text-danger">
-            <span className="status-dot bg-danger animate-pulse" />
-            {criticalCount} critical
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {criticalCount > 0 && (
+            <span className="flex items-center gap-1 text-[10px] font-mono text-danger">
+              <span className="status-dot bg-danger animate-pulse" />
+              {criticalCount} critical
+            </span>
+          )}
+          {alerts.length > 0 && (
+            <button
+              onClick={clearAlerts}
+              className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-secondary text-secondary-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
+              title="Clear all alerts"
+            >
+              <Trash2 className="w-3 h-3" />
+              Clear
+            </button>
+          )}
+        </div>
       </div>
       <div className="flex-1 overflow-auto p-3 space-y-2">
         {!enableAlerts && (

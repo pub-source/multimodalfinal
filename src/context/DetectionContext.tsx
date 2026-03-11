@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 
 export interface Detection {
   id: string;
@@ -52,6 +52,7 @@ interface DetectionContextType {
 
   alerts: Alert[];
   addAlert: (a: Alert) => void;
+  clearAlerts: () => void;
 
   logs: LogEntry[];
   addLog: (l: LogEntry) => void;
@@ -75,14 +76,35 @@ interface DetectionContextType {
   setSimulationMode: (v: boolean) => void;
 
   // Input mode
-  videoMode: "live" | "upload";
-  setVideoMode: (v: "live" | "upload") => void;
+  videoMode: "live" | "upload" | "cctv";
+  setVideoMode: (v: "live" | "upload" | "cctv") => void;
   audioMode: "live" | "upload";
   setAudioMode: (v: "live" | "upload") => void;
+
+  // Camera settings
+  resolution: string;
+  setResolution: (v: string) => void;
+  cctvUrl: string;
+  setCctvUrl: (v: string) => void;
 
   // Time series for analytics
   timeSeries: TimeSeriesPoint[];
   addTimeSeriesPoint: (p: TimeSeriesPoint) => void;
+
+  // Shared video element for saliency panels
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+
+  // Threshold sensitivity
+  thresholdLevel: number;
+  setThresholdLevel: (v: number) => void;
+
+  // Mirror mode
+  mirrorMode: boolean;
+  setMirrorMode: (v: boolean) => void;
+
+  // Quality mode
+  qualityMode: "hd" | "sd";
+  setQualityMode: (v: "hd" | "sd") => void;
 }
 
 const DetectionContext = createContext<DetectionContextType | null>(null);
@@ -112,10 +134,17 @@ export const DetectionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [enableAlerts, setEnableAlerts] = useState(true);
   const [simulationMode, setSimulationMode] = useState(false);
 
-  const [videoMode, setVideoMode] = useState<"live" | "upload">("live");
+  const [videoMode, setVideoMode] = useState<"live" | "upload" | "cctv">("live");
   const [audioMode, setAudioMode] = useState<"live" | "upload">("live");
+  const [resolution, setResolution] = useState("1280x720");
+  const [cctvUrl, setCctvUrl] = useState("");
 
   const [timeSeries, setTimeSeries] = useState<TimeSeriesPoint[]>([]);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const [thresholdLevel, setThresholdLevel] = useState(80);
+  const [mirrorMode, setMirrorMode] = useState(false);
+  const [qualityMode, setQualityMode] = useState<"hd" | "sd">("hd");
 
   const addSpeechEvent = useCallback((e: SpeechEvent) => {
     setSpeechEvents((prev) => [e, ...prev].slice(0, MAX_ITEMS));
@@ -123,6 +152,10 @@ export const DetectionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addAlert = useCallback((a: Alert) => {
     setAlerts((prev) => [a, ...prev].slice(0, MAX_ITEMS));
+  }, []);
+
+  const clearAlerts = useCallback(() => {
+    setAlerts([]);
   }, []);
 
   const addLog = useCallback((l: LogEntry) => {
@@ -140,7 +173,7 @@ export const DetectionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isRecording, setIsRecording,
         currentVolume, setCurrentVolume,
         speechEvents, addSpeechEvent,
-        alerts, addAlert,
+        alerts, addAlert, clearAlerts,
         logs, addLog,
         isLive, setIsLive,
         modelLoaded, setModelLoaded,
@@ -151,7 +184,13 @@ export const DetectionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         simulationMode, setSimulationMode,
         videoMode, setVideoMode,
         audioMode, setAudioMode,
+        resolution, setResolution,
+        cctvUrl, setCctvUrl,
         timeSeries, addTimeSeriesPoint,
+        videoRef,
+        thresholdLevel, setThresholdLevel,
+        mirrorMode, setMirrorMode,
+        qualityMode, setQualityMode,
       }}
     >
       {children}
